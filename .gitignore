@@ -1,7 +1,14 @@
-*.class
+target
+/logs
+/.idea
+/.idea_modules
+/.classpath
+/.project
+/.settings
+/.sbtserver
+/RUNNING_PID
 
-# Mobile Tools for Java (J2ME)
-.mtj.tmp/
+*.class
 
 # Package Files #
 *.jar
