@@ -1,0 +1,16 @@
+@(predicate: String, distinctObjects: scala.collection.immutable.List[String])
+
+@main(s"Properties and distinct objects for predicate $predicate - ImportNow") {
+
+
+    <h1>Predicate @predicate</h1>
+
+    <table>
+    @for(obj <- distinctObjects) {
+        <tr>
+            <td>@obj</td>
+        </tr>
+    }
+    </table>
+
+}

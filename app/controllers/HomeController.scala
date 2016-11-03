@@ -40,10 +40,29 @@ class HomeController @Inject() (tripleStore: TripleStore, fileUploader: FileUplo
   }
 
   def listSubjects = Action {
-    Ok(views.html.subjects(tripleStore.getSubjects()))
+    val subjects: Set[String] = tripleStore.getSubjects()
+    Ok(views.html.subjects(subjects.toList.sorted))
   }
 
   def getSubject(subjectEncoded: String) = Action {
     val subject = UriEncoding.decodePath(subjectEncoded, "US-ASCII")
-    Ok(views.html.subject(subject, tripleStore.getBySubject(subject)))
-  }}
+    val properties: Map[String, String] = tripleStore.getBySubject(subject)
+    properties.map {
+      case (pred, obj) => {
+        println(s"$pred = $obj")
+      }
+    }
+    Ok(views.html.subject(subject, properties))
+  }
+
+  def listPredicates = Action {
+    val predicates: Set[String] = tripleStore.getPredicates()
+    Ok(views.html.predicates(predicates.toList.sorted))
+  }
+
+  def getPredicate(predicateEncoded: String) = Action {
+    val predicate = UriEncoding.decodePath(predicateEncoded, "US-ASCII")
+    val distinctObjects = tripleStore.getDistinctObjects(predicate)
+    Ok(views.html.predicate(predicate, distinctObjects.toList.sorted))
+  }
+}

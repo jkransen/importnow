@@ -9,6 +9,7 @@ target
 /.sbtserver
 /RUNNING_PID
 project/.sbtserver
+project/.sbtserver.lock
 
 *.class
 

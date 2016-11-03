@@ -23,7 +23,11 @@ trait TripleStore {
 
   def getSubjects(): Set[String]
 
+  def getPredicates(): Set[String]
+
   def getBySubject(subject: String): Map[String, String]
+
+  def getDistinctObjects(predicate: String): Set[String]
 }
 
 /**
@@ -57,8 +61,8 @@ class TripleStoreImpl @Inject() (filesystem: FileSystem, lifecycle: ApplicationL
         keyValues => keyValues.foreach {
           case (key, value) =>
             save(uploadName, i , key, value)
-            i = i + 1
         }
+        i = i + 1
       }
     }
   }
@@ -92,11 +96,11 @@ class TripleStoreImpl @Inject() (filesystem: FileSystem, lifecycle: ApplicationL
     valueFactory.createIRI(baseUri, localName)
   }
 
-  override def getSubjects(): Set[String] = {
-    def collect(collected: Set[String], repositoryResult: RepositoryResult[Statement]): Set[String] = {
+  private def getAll[T](selection: Statement => T) = {
+    def collect(collected: Set[T], repositoryResult: RepositoryResult[Statement]): Set[T] = {
       if (repositoryResult.hasNext) {
         val next = repositoryResult.next()
-        collect(collected + next.getSubject.stringValue(), repositoryResult)
+        collect(collected + selection(next), repositoryResult)
       } else {
         collected
       }
@@ -106,6 +110,15 @@ class TripleStoreImpl @Inject() (filesystem: FileSystem, lifecycle: ApplicationL
       val statements = conn.getStatements(null, null, null)
       collect(Set(), statements)
     }
+  }
+
+  override def getSubjects(): Set[String] = {
+    getAll(result => result.getSubject.stringValue())
+  }
+
+
+  override def getPredicates(): Set[String] = {
+    getAll(result => result.getPredicate.stringValue())
   }
 
   override def getBySubject(subjectString: String): Map[String, String] = {
@@ -123,6 +136,24 @@ class TripleStoreImpl @Inject() (filesystem: FileSystem, lifecycle: ApplicationL
     transactional { conn =>
       val statements = conn.getStatements(subjectResource, null, null)
       collect(Map(), statements)
+    }
+  }
+
+  override def getDistinctObjects(predicateString: String): Set[String] = {
+    val predicateResource = valueFactory.createIRI(predicateString)
+
+    def collect(collected: Set[String], repositoryResult: RepositoryResult[Statement]): Set[String] = {
+      if (repositoryResult.hasNext) {
+        val next = repositoryResult.next()
+        collect(collected + next.getObject.stringValue(), repositoryResult)
+      } else {
+        collected
+      }
+    }
+
+    transactional { conn =>
+      val statements = conn.getStatements(null, predicateResource, null)
+      collect(Set(), statements)
     }
   }
 }

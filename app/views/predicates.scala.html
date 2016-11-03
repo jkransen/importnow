@@ -1,24 +1,20 @@
-@*
- * This template takes a single argument, a String containing a
- * message to display.
- *@
-@(subjects: scala.collection.immutable.List[String])
+@(predicates: scala.collection.immutable.List[String])
 
 @*
  * Call the `main` template with two arguments. The first
  * argument is a `String` with the title of the page, the second
  * argument is an `Html` object containing the body of the page.
  *@
-@main("Subjects - ImportNow") {
+@main("Predicates - ImportNow") {
 
     @*
      * Get an `Html` object by calling the built-in Play welcome
      * template and passing a `String` message.
      *@
-    <h1>Subjects</h1>
+    <h1>Predicates</h1>
 
-    @for(subject <- subjects) {
-        <a href="/subjects/@helper.urlEncode(subject)">@subject</a><br/>
+    @for(predicate <- predicates) {
+        <a href="/predicates/@helper.urlEncode(predicate)">@predicate</a><br/>
     }
 
 }
