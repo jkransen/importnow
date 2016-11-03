@@ -4,14 +4,16 @@ import java.io.File
 import javax.inject._
 
 import play.api.mvc._
-import services.{FileSystem, FileUploader}
+import services.{FileSystem, FileUploader, TripleStore}
+
+import play.utils.UriEncoding
 
 /**
  * This controller creates an `Action` to handle HTTP requests to the
  * application's home page.
  */
 @Singleton
-class HomeController @Inject() (fileUploader: FileUploader, fileSystem: FileSystem) extends Controller {
+class HomeController @Inject() (tripleStore: TripleStore, fileUploader: FileUploader, fileSystem: FileSystem) extends Controller {
 
   /**
    * Create an Action to render an HTML page with a welcome message.
@@ -37,4 +39,11 @@ class HomeController @Inject() (fileUploader: FileUploader, fileSystem: FileSyst
     }
   }
 
-}
+  def listSubjects = Action {
+    Ok(views.html.subjects(tripleStore.getSubjects()))
+  }
+
+  def getSubject(subjectEncoded: String) = Action {
+    val subject = UriEncoding.decodePath(subjectEncoded, "US-ASCII")
+    Ok(views.html.subject(subject, tripleStore.getBySubject(subject)))
+  }}

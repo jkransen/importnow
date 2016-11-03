@@ -13,3 +13,7 @@ GET     /message                    controllers.AsyncController.message
 GET     /assets/*file               controllers.Assets.versioned(path="/public", file: Asset)
 
 POST  /                             controllers.HomeController.upload()
+
+GET   /subjects/                    controllers.HomeController.listSubjects
+
+GET   /subjects/*subject            controllers.HomeController.getSubject(subject)

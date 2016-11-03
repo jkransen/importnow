@@ -17,4 +17,5 @@ libraryDependencies ++= Seq(
   "org.scalatestplus.play" %% "scalatestplus-play" % "1.5.1" % Test
 )
 
-fork in run := true
+// no fork, to make it easier to kill together with cli command
+fork in run := false

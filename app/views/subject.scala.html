@@ -1,0 +1,25 @@
+@*
+ * This template takes a single argument, a String containing a
+ * message to display.
+ *@
+@(subject: String, properties: scala.collection.Map[String, String])
+
+@*
+ * Call the `main` template with two arguments. The first
+ * argument is a `String` with the title of the page, the second
+ * argument is an `Html` object containing the body of the page.
+ *@
+@main(s"Properties for subject $subject - ImportNow") {
+
+
+    Subject @subject
+
+    <table>
+    @for((predicate, obj) <- properties) {
+        <tr>
+        <td>@predicate</td><td>@obj</td>
+        </tr>
+    }
+    </table>
+
+}

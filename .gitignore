@@ -1,12 +1,14 @@
 target
 /logs
 /.idea
+.idea/
 /.idea_modules
 /.classpath
 /.project
 /.settings
 /.sbtserver
 /RUNNING_PID
+project/.sbtserver
 
 *.class
 
