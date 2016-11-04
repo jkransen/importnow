@@ -4,7 +4,7 @@ import javax.inject._
 
 import com.google.inject.ImplementedBy
 import org.eclipse.rdf4j.IsolationLevels
-import org.eclipse.rdf4j.model.{IRI, Statement}
+import org.eclipse.rdf4j.model.{IRI, Resource, Statement}
 import org.eclipse.rdf4j.repository.RepositoryResult
 import org.eclipse.rdf4j.repository.sail.{SailRepository, SailRepositoryConnection}
 import org.eclipse.rdf4j.sail.nativerdf.NativeStore
@@ -21,9 +21,11 @@ trait TripleStore {
 
   def saveAsTriples(uploadName: String, stream: Stream[Map[String, String]]): Unit
 
-  def getSubjects(): Set[String]
+  def getSubjects: Set[String]
 
-  def getPredicates(): Set[String]
+  def getPredicates: Set[String]
+
+  def getContexts: Set[String]
 
   def getBySubject(subject: String): Map[String, String]
 
@@ -154,6 +156,21 @@ class TripleStoreImpl @Inject() (filesystem: FileSystem, lifecycle: ApplicationL
     transactional { conn =>
       val statements = conn.getStatements(null, predicateResource, null)
       collect(Set(), statements)
+    }
+  }
+
+  override def getContexts: Set[String] = {
+    def collect(collected: Set[String], repositoryResult: RepositoryResult[Resource]): Set[String] = {
+      if (repositoryResult.hasNext) {
+        val next = repositoryResult.next()
+        collect(collected + next.stringValue(), repositoryResult)
+      } else {
+        collected
+      }
+    }
+
+    transactional { conn =>
+      collect(Set(), conn.getContextIDs)
     }
   }
 }

@@ -18,3 +18,5 @@ GET   /subjects/                    controllers.HomeController.listSubjects
 GET   /subjects/*subject            controllers.HomeController.getSubject(subject)
 GET   /predicates/                  controllers.HomeController.listPredicates
 GET   /predicates/*predicate        controllers.HomeController.getPredicate(predicate)
+
+GET   /uploadsContexts/             controllers.HomeController.listUploadsContexts
