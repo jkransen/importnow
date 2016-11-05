@@ -15,11 +15,11 @@
      * Get an `Html` object by calling the built-in Play welcome
      * template and passing a `String` message.
      *@
-    Hello world!
+    Select a file to upload
 
     @helper.form(action = routes.HomeController.upload, 'enctype -> "multipart/form-data") {
 
-        <input type="file" name="picture">
+        <input type="file" name="forimport">
 
         <p>
             <input type="submit">

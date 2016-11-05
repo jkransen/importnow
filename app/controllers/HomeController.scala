@@ -2,16 +2,22 @@ package controllers
 
 import javax.inject._
 
+import play.api.data.Form
+import play.api.data.Forms._
 import play.api.mvc._
+import play.api.i18n.{I18nSupport, MessagesApi}
 import play.utils.UriEncoding
-import services.{FileUploader, TripleStore}
+import services.{FileSystem, TripleStore}
+
+case class HeaderMapping(headerName: String, localName: Option[String])
+case class HeadersMapping(filename: String, headers: List[HeaderMapping])
 
 /**
  * This controller creates an `Action` to handle HTTP requests to the
  * application's home page.
  */
 @Singleton
-class HomeController @Inject() (tripleStore: TripleStore, fileUploader: FileUploader) extends Controller {
+class HomeController @Inject() (tripleStore: TripleStore, fileSystem: FileSystem, val messagesApi: MessagesApi) extends Controller with I18nSupport {
 
   /**
    * Create an Action to render an HTML page with a welcome message.
@@ -24,15 +30,56 @@ class HomeController @Inject() (tripleStore: TripleStore, fileUploader: FileUplo
   }
 
   def upload = Action(parse.multipartFormData) { request =>
-    request.body.file("picture").map { upload =>
+    request.body.file("forimport").map { upload =>
       val filename: String = upload.filename
       val contentType: Option[String] = upload.contentType
-      fileUploader.uploadFile(file => upload.ref.moveTo(file), filename, contentType)
-      Ok(s"File uploaded: $filename, content type: $contentType")
+      fileSystem.uploadFile(filename, contentType) {
+        file => upload.ref.moveTo(file)
+      }
+      // Ok(s"File uploaded: $filename, content type: $contentType")
+      Redirect(routes.HomeController.mapHeaders(filename))
     }.getOrElse {
       Redirect(routes.HomeController.index).flashing(
         "error" -> "Missing file")
     }
+  }
+
+  val headersMappingForm = Form(
+    mapping(
+      "filename" -> text,
+      "headers" -> list(
+        mapping(
+          "headerName" -> text,
+          "localName" -> optional(text)
+        )(HeaderMapping.apply)(HeaderMapping.unapply)
+      )
+    )(HeadersMapping.apply)(HeadersMapping.unapply)
+  )
+
+  def mapHeaders(filename: String) = Action { implicit request =>
+    fileSystem.fileHeaders(filename) match {
+      case Some(headers) =>
+        val headersMapping = headersMappingForm.fill(HeadersMapping(filename, headers.map(HeaderMapping(_, None))))
+        Ok(views.html.mapColumns(filename, headersMapping))
+      case None => Redirect(routes.HomeController.index).flashing(
+        "error" -> "File has no headers")
+    }
+  }
+
+  def analyze = Action { implicit request =>
+    headersMappingForm.bindFromRequest.fold(
+      formWithErrors => {
+        // binding failure, you retrieve the form containing errors:
+        BadRequest(views.html.mapColumns("", formWithErrors))
+      },
+      mappingData => {
+        val filename = mappingData.filename
+        fileSystem.fileStream(filename) { stream =>
+          tripleStore.saveAsTriples(filename, stream)
+        }
+        Ok
+      }
+    )
   }
 
   def listSubjects = Action {
@@ -58,7 +105,7 @@ class HomeController @Inject() (tripleStore: TripleStore, fileUploader: FileUplo
   }
 
   def listUploadsContexts() = Action {
-    val uploads = fileUploader.getUploads
+    val uploads = fileSystem.getUploads
     val contexts = tripleStore.getContexts.toList.sorted
     Ok(views.html.uploadsContexts(zip(uploads, contexts)))
   }

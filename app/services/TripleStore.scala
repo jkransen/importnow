@@ -1,5 +1,6 @@
 package services
 
+import java.io.File
 import javax.inject._
 
 import com.google.inject.ImplementedBy
@@ -41,9 +42,13 @@ trait TripleStore {
  * injected.
  */
 @Singleton
-class TripleStoreImpl @Inject() (filesystem: FileSystem, lifecycle: ApplicationLifecycle, configuration: Configuration) extends TripleStore {
+class TripleStoreImpl @Inject() (lifecycle: ApplicationLifecycle, configuration: Configuration) extends TripleStore {
 
-  val repo = new SailRepository(new NativeStore(filesystem.sailDir))
+  val repodir = configuration.underlying.getString("importnow.dir")
+  val sailDir = new File(repodir + "/sail")
+  sailDir.mkdirs()
+
+  val repo = new SailRepository(new NativeStore(sailDir))
   if (!repo.isInitialized) {
     repo.initialize()
   }

@@ -9,7 +9,7 @@
  * argument is a `String` with the title of the page, the second
  * argument is an `Html` object containing the body of the page.
  *@
-@main("Subjects - ImportNow") {
+@main("Upload files and contexts - ImportNow") {
 
     @*
      * Get an `Html` object by calling the built-in Play welcome
@@ -18,9 +18,9 @@
     <h1>Uploads and contexts</h1>
 
     <table>
-    @for((upload, context) <- uploadsContexts) {
+    @for((uploadFile, context) <- uploadsContexts) {
         <tr>
-            <td>@upload</td>
+            <td>@uploadFile</td>
             <td>@context</td>
         </tr>
     }

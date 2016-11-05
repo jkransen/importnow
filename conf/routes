@@ -3,20 +3,22 @@
 # ~~~~
 
 # An example controller showing a sample home page
-GET     /                           controllers.HomeController.index
+GET     /                             controllers.HomeController.index
 # An example controller showing how to use dependency injection
-GET     /count                      controllers.CountController.count
+GET     /count                        controllers.CountController.count
 # An example controller showing how to write asynchronous code
-GET     /message                    controllers.AsyncController.message
+GET     /message                      controllers.AsyncController.message
 
 # Map static resources from the /public folder to the /assets URL path
-GET     /assets/*file               controllers.Assets.versioned(path="/public", file: Asset)
+GET     /assets/*file                 controllers.Assets.versioned(path="/public", file: Asset)
 
-POST  /                             controllers.HomeController.upload()
+POST    /upload                       controllers.HomeController.upload()
+GET     /mapHeaders/*file             controllers.HomeController.mapHeaders(file)
+POST    /analyze                      controllers.HomeController.analyze
 
-GET   /subjects/                    controllers.HomeController.listSubjects
-GET   /subjects/*subject            controllers.HomeController.getSubject(subject)
-GET   /predicates/                  controllers.HomeController.listPredicates
-GET   /predicates/*predicate        controllers.HomeController.getPredicate(predicate)
+GET     /subjects/                    controllers.HomeController.listSubjects
+GET     /subjects/*subject            controllers.HomeController.getSubject(subject)
+GET     /predicates/                  controllers.HomeController.listPredicates
+GET     /predicates/*predicate        controllers.HomeController.getPredicate(predicate)
 
-GET   /uploadsContexts/             controllers.HomeController.listUploadsContexts
+GET     /uploadsContexts/             controllers.HomeController.listUploadsContexts

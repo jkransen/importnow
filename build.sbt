@@ -19,3 +19,5 @@ libraryDependencies ++= Seq(
 
 // no fork, to make it easier to kill together with cli command
 fork in run := false
+
+fork in run := true
