@@ -9,7 +9,7 @@ import play.api.i18n.{I18nSupport, MessagesApi}
 import play.utils.UriEncoding
 import services.{FileSystem, TripleStore}
 
-case class HeaderMapping(headerName: String, localName: Option[String])
+case class HeaderMapping(headerName: String, localName: String)
 case class HeadersMapping(filename: String, headers: List[HeaderMapping])
 
 /**
@@ -50,7 +50,7 @@ class HomeController @Inject() (tripleStore: TripleStore, fileSystem: FileSystem
       "headers" -> list(
         mapping(
           "headerName" -> text,
-          "localName" -> optional(text)
+          "localName" -> text
         )(HeaderMapping.apply)(HeaderMapping.unapply)
       )
     )(HeadersMapping.apply)(HeadersMapping.unapply)
@@ -59,7 +59,7 @@ class HomeController @Inject() (tripleStore: TripleStore, fileSystem: FileSystem
   def mapHeaders(filename: String) = Action { implicit request =>
     fileSystem.fileHeaders(filename) match {
       case Some(headers) =>
-        val headersMapping = headersMappingForm.fill(HeadersMapping(filename, headers.map(HeaderMapping(_, None))))
+        val headersMapping = headersMappingForm.fill(HeadersMapping(filename, headers.map(HeaderMapping(_, "localName"))))
         Ok(views.html.mapColumns(filename, headersMapping))
       case None => Redirect(routes.HomeController.index).flashing(
         "error" -> "File has no headers")
