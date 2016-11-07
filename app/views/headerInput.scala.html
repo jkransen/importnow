@@ -1,0 +1,9 @@
+@(elements: helper.FieldElements)
+<div class="input-group @if(elements.hasErrors) {has-error}">
+<label for="@elements.id">@elements.label</label>
+@elements.input
+<div class="info">@elements.infos</div>
+@if(elements.hasErrors){
+    <div class="input-group has-error"><span class="help-block">@elements.errors</span></div>
+}
+</div>

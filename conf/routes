@@ -14,7 +14,7 @@ GET     /assets/*file                 controllers.Assets.versioned(path="/public
 
 POST    /upload                       controllers.HomeController.upload()
 GET     /mapHeaders/*file             controllers.HomeController.mapHeaders(file)
-POST    /analyze                      controllers.HomeController.analyze
+POST    /analyze/*file                controllers.HomeController.analyze(file)
 
 GET     /subjects/                    controllers.HomeController.listSubjects
 GET     /subjects/*subject            controllers.HomeController.getSubject(subject)

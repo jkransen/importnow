@@ -2,26 +2,22 @@
 
 @import helper._
 
+@headerMappingField = @{ FieldConstructor(headerInput.f) }
+
 @main(s"Properties for subject $subject - ImportNow") {
 
     <h1>File @filename</h1>
 
-    @helper.form(action = routes.HomeController.analyze()) {
+    @helper.form(action = routes.HomeController.analyze(filename)) {
         @helper.inputText(headersMappingForm("filename"))
-        <ul>
-        @helper.repeat(headersMappingForm("headers")) { headerMapping =>
-            <li>
-                @helper.inputText(headerMapping("headerName"))
-            </li>
-        }
-        </ul>
-
 
         @repeat(headersMappingForm("headers"), min = 1) { headerMapping =>
-            <div id="headerMappingField">
-                @inputText(headersMappingForm(headerMapping.name.toString + ".localName"), 'label -> headersMappingForm(headerMapping.name.toString + ".headerName").value)
-            </div>
+            <input type="hidden" name="@{headerMapping.name.toString + ".headerName"}" value="@headersMappingForm(headerMapping.name.toString + ".headerName").value" >
+            @inputText(headersMappingForm(headerMapping.name.toString + ".localName"), '_label -> headersMappingForm(headerMapping.name.toString + ".headerName").value)(handler = headerMappingField, messages)
         }
+        <p>
+            <input type="submit"/>
+        </p>
     }
 
 }

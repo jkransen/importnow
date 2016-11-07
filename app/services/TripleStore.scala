@@ -20,7 +20,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 @ImplementedBy(classOf[TripleStoreImpl])
 trait TripleStore {
 
-  def saveAsTriples(uploadName: String, stream: Stream[Map[String, String]]): Unit
+  def saveAsTriples(uploadName: String, stream: Stream[Map[String, String]], headerMapping: Map[String, String]): Unit
 
   def getSubjects: Set[String]
 
@@ -60,14 +60,14 @@ class TripleStoreImpl @Inject() (lifecycle: ApplicationLifecycle, configuration:
   val valueFactory = repo.getValueFactory
   val baseUri = configuration.underlying.getString("importnow.uriroot")
 
-  override def saveAsTriples(uploadName: String, stream: Stream[Map[String, String]]): Unit = {
+  override def saveAsTriples(uploadName: String, stream: Stream[Map[String, String]], headerMapping: Map[String, String]): Unit = {
     var i = 0
 
     transactional { implicit conn =>
       stream.foreach {
         keyValues => keyValues.foreach {
           case (key, value) =>
-            save(uploadName, i , key, value)
+            save(uploadName, i , headerMapping(key), value)
         }
         i = i + 1
       }

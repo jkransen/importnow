@@ -59,23 +59,26 @@ class HomeController @Inject() (tripleStore: TripleStore, fileSystem: FileSystem
   def mapHeaders(filename: String) = Action { implicit request =>
     fileSystem.fileHeaders(filename) match {
       case Some(headers) =>
-        val headersMapping = headersMappingForm.fill(HeadersMapping(filename, headers.map(HeaderMapping(_, "localName"))))
+        val headersMapping = headersMappingForm.fill(HeadersMapping(filename, headers.map(header => HeaderMapping(header, header + "2"))))
         Ok(views.html.mapColumns(filename, headersMapping))
       case None => Redirect(routes.HomeController.index).flashing(
         "error" -> "File has no headers")
     }
   }
 
-  def analyze = Action { implicit request =>
+  def analyze(filename: String) = Action { implicit request =>
     headersMappingForm.bindFromRequest.fold(
       formWithErrors => {
         // binding failure, you retrieve the form containing errors:
-        BadRequest(views.html.mapColumns("", formWithErrors))
+        BadRequest(views.html.mapColumns(filename, formWithErrors))
       },
       mappingData => {
         val filename = mappingData.filename
         fileSystem.fileStream(filename) { stream =>
-          tripleStore.saveAsTriples(filename, stream)
+          val headersMapped = mappingData.headers.map {
+            case HeaderMapping(headerName, localName) => (headerName -> localName)
+          }
+          tripleStore.saveAsTriples(filename, stream, headersMapped.toMap)
         }
         Ok
       }
