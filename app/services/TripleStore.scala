@@ -6,7 +6,8 @@ import javax.inject._
 import com.google.inject.ImplementedBy
 import org.eclipse.rdf4j.IsolationLevels
 import org.eclipse.rdf4j.model.{IRI, Resource, Statement}
-import org.eclipse.rdf4j.repository.RepositoryResult
+import org.eclipse.rdf4j.repository.{RepositoryConnection, RepositoryResult}
+import org.eclipse.rdf4j.repository.manager.RemoteRepositoryManager
 import org.eclipse.rdf4j.repository.sail.{SailRepository, SailRepositoryConnection}
 import org.eclipse.rdf4j.sail.nativerdf.NativeStore
 import play.api.Configuration
@@ -48,7 +49,13 @@ class TripleStoreImpl @Inject() (lifecycle: ApplicationLifecycle, configuration:
   val sailDir = new File(repodir + "/sail")
   sailDir.mkdirs()
 
-  val repo = new SailRepository(new NativeStore(sailDir))
+  // local repo
+  //val repo = new SailRepository(new NativeStore(sailDir))
+  val repositoryManager =
+  new RemoteRepositoryManager( "http://127.0.0.1:7200/" )
+  repositoryManager.initialize()
+  // remote repo
+  val repo = repositoryManager.getRepository("repo1")
   if (!repo.isInitialized) {
     repo.initialize()
   }
@@ -56,6 +63,7 @@ class TripleStoreImpl @Inject() (lifecycle: ApplicationLifecycle, configuration:
   lifecycle.addStopHook { () =>
     Future(repo.shutDown())
   }
+
 
   val valueFactory = repo.getValueFactory
   val baseUri = configuration.underlying.getString("importnow.uriroot")
@@ -74,7 +82,7 @@ class TripleStoreImpl @Inject() (lifecycle: ApplicationLifecycle, configuration:
     }
   }
 
-  private def transactional[T](block: SailRepositoryConnection => T): T = {
+  private def transactional[T](block: RepositoryConnection => T): T = {
     val conn = repo.getConnection
     conn.begin(IsolationLevels.READ_COMMITTED)
 
@@ -91,7 +99,7 @@ class TripleStoreImpl @Inject() (lifecycle: ApplicationLifecycle, configuration:
     }
   }
 
-  private def save(uploadName: String, index: Int, predicateString: String, valueString: String)(implicit conn: SailRepositoryConnection): Unit = {
+  private def save(uploadName: String, index: Int, predicateString: String, valueString: String)(implicit conn: RepositoryConnection): Unit = {
     val context = valueFactory.createIRI(baseUri, s"uploads/$uploadName" )
     val subject = valueFactory.createIRI(baseUri, s"uploads/$uploadName/records/$index" )
     val predicate = valueFactory.createIRI(baseUri, s"$uploadName/$predicateString")
