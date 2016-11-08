@@ -81,7 +81,7 @@ class HomeController @Inject() (tripleStore: TripleStore, fileSystem: FileSystem
           }
           tripleStore.saveAsTriples(mappingData.typeName, stream, headersMapped.toMap)
         }
-        Redirect(routes.HomeController.listUploadsContexts())
+        Redirect(routes.HomeController.listSubjects())
       }
     )
   }

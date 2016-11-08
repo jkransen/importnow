@@ -18,9 +18,9 @@ Press the Run button to run the application.
 
 # Configuration
 
-in conf/application.conf, the entries on the bottom are application specific, and start with "importnow".
+In `conf/application.conf`, the entries on the bottom are application specific, and start with "importnow".
 
-# Remote repository
+# Remote repository (Optional)
 
 Download and install [GraphDB Free](http://info.ontotext.com/graphdb-free-ontotext) from Ontotext. Connect to is through your browser, and create a new repo, e.g. "importnow".
 

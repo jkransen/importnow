@@ -7,11 +7,7 @@
  *@
 @main("ImportNow") {
 
-    @*
-     * Get an `Html` object by calling the built-in Play welcome
-     * template and passing a `String` message.
-     *@
-    Select a file to upload
+    Select a CSV file to upload
 
     @helper.form(action = routes.HomeController.upload, 'enctype -> "multipart/form-data") {
 

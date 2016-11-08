@@ -11,7 +11,7 @@
     @helper.form(action = routes.HomeController.analyze(filename)) {
         @helper.inputText(headersMappingForm("typeName"))
 
-        @repeat(headersMappingForm("headers"), min = 1) { headerMapping =>
+        @repeat(headersMappingForm("headers")) { headerMapping =>
             <input type="hidden" name="@{headerMapping.name.toString + ".headerName"}" value="@headersMappingForm(headerMapping.name.toString + ".headerName").value" >
             @inputText(headersMappingForm(headerMapping.name.toString + ".localName"), '_label -> headersMappingForm(headerMapping.name.toString + ".headerName").value)(handler = headerMappingField, messages)
         }
