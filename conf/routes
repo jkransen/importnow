@@ -16,9 +16,9 @@ POST    /upload                       controllers.HomeController.upload()
 GET     /mapHeaders/*file             controllers.HomeController.mapHeaders(file)
 POST    /analyze/*file                controllers.HomeController.analyze(file)
 
-GET     /subjects/                    controllers.HomeController.listSubjects
+GET     /subjects/                    controllers.HomeController.listSubjects()
 GET     /subjects/*subject            controllers.HomeController.getSubject(subject)
-GET     /predicates/                  controllers.HomeController.listPredicates
+GET     /predicates/                  controllers.HomeController.listPredicates()
 GET     /predicates/*predicate        controllers.HomeController.getPredicate(predicate)
 
-GET     /uploadsContexts/             controllers.HomeController.listUploadsContexts
+GET     /uploadsContexts/             controllers.HomeController.listUploadsContexts()

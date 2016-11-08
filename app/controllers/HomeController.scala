@@ -9,8 +9,10 @@ import play.api.i18n.{I18nSupport, MessagesApi}
 import play.utils.UriEncoding
 import services.{FileSystem, TripleStore}
 
+import scala.util.matching.Regex
+
 case class HeaderMapping(headerName: String, localName: String)
-case class HeadersMapping(filename: String, headers: List[HeaderMapping])
+case class HeadersMapping(typeName: String, headers: List[HeaderMapping])
 
 /**
  * This controller creates an `Action` to handle HTTP requests to the
@@ -25,28 +27,27 @@ class HomeController @Inject() (tripleStore: TripleStore, fileSystem: FileSystem
    * will be called when the application receives a `GET` request with
    * a path of `/`.
    */
-  def index = Action {
-    Ok(views.html.index("Your new application is ready."))
+  def index() = Action {
+    Ok(views.html.index())
   }
 
-  def upload = Action(parse.multipartFormData) { request =>
+  def upload() = Action(parse.multipartFormData) { request =>
     request.body.file("forimport").map { upload =>
       val filename: String = upload.filename
       val contentType: Option[String] = upload.contentType
       fileSystem.uploadFile(filename, contentType) {
         file => upload.ref.moveTo(file)
       }
-      // Ok(s"File uploaded: $filename, content type: $contentType")
       Redirect(routes.HomeController.mapHeaders(filename))
     }.getOrElse {
-      Redirect(routes.HomeController.index).flashing(
+      Redirect(routes.HomeController.index()).flashing(
         "error" -> "Missing file")
     }
   }
 
   val headersMappingForm = Form(
     mapping(
-      "filename" -> text,
+      "typeName" -> text,
       "headers" -> list(
         mapping(
           "headerName" -> text,
@@ -59,9 +60,9 @@ class HomeController @Inject() (tripleStore: TripleStore, fileSystem: FileSystem
   def mapHeaders(filename: String) = Action { implicit request =>
     fileSystem.fileHeaders(filename) match {
       case Some(headers) =>
-        val headersMapping = headersMappingForm.fill(HeadersMapping(filename, headers.map(header => HeaderMapping(header, header + "2"))))
+        val headersMapping = headersMappingForm.fill(HeadersMapping(filename.split('.')(0), headers.map(header => HeaderMapping(header, toSlug(header)))))
         Ok(views.html.mapColumns(filename, headersMapping))
-      case None => Redirect(routes.HomeController.index).flashing(
+      case None => Redirect(routes.HomeController.index()).flashing(
         "error" -> "File has no headers")
     }
   }
@@ -73,19 +74,19 @@ class HomeController @Inject() (tripleStore: TripleStore, fileSystem: FileSystem
         BadRequest(views.html.mapColumns(filename, formWithErrors))
       },
       mappingData => {
-        val filename = mappingData.filename
+        val typeName = mappingData.typeName
         fileSystem.fileStream(filename) { stream =>
           val headersMapped = mappingData.headers.map {
             case HeaderMapping(headerName, localName) => (headerName -> localName)
           }
-          tripleStore.saveAsTriples(filename, stream, headersMapped.toMap)
+          tripleStore.saveAsTriples(mappingData.typeName, stream, headersMapped.toMap)
         }
-        Ok
+        Redirect(routes.HomeController.listUploadsContexts())
       }
     )
   }
 
-  def listSubjects = Action {
+  def listSubjects() = Action {
     val subjects: Set[String] = tripleStore.getSubjects
     Ok(views.html.subjects(subjects.toList.sorted))
   }
@@ -96,7 +97,7 @@ class HomeController @Inject() (tripleStore: TripleStore, fileSystem: FileSystem
     Ok(views.html.subject(subject, properties))
   }
 
-  def listPredicates = Action {
+  def listPredicates() = Action {
     val predicates: Set[String] = tripleStore.getPredicates
     Ok(views.html.predicates(predicates.toList.sorted))
   }
@@ -117,5 +118,14 @@ class HomeController @Inject() (tripleStore: TripleStore, fileSystem: FileSystem
     // TODO
     List((Some(uploads.head), Some(contexts.head)))
   }
+
+  val regex: Regex = "\\w+".r
+
+  private def toSlug(header: String): String = {
+    val headerBeforeBraces = header.split("[\\[|\\(]")(0)
+    val slug = regex.findAllIn(headerBeforeBraces.toLowerCase).mkString("_")
+    slug
+  }
+
 
 }

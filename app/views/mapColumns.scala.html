@@ -9,7 +9,7 @@
     <h1>File @filename</h1>
 
     @helper.form(action = routes.HomeController.analyze(filename)) {
-        @helper.inputText(headersMappingForm("filename"))
+        @helper.inputText(headersMappingForm("typeName"))
 
         @repeat(headersMappingForm("headers"), min = 1) { headerMapping =>
             <input type="hidden" name="@{headerMapping.name.toString + ".headerName"}" value="@headersMappingForm(headerMapping.name.toString + ".headerName").value" >

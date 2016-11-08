@@ -6,9 +6,9 @@ import javax.inject._
 import com.google.inject.ImplementedBy
 import org.eclipse.rdf4j.IsolationLevels
 import org.eclipse.rdf4j.model.{IRI, Resource, Statement}
-import org.eclipse.rdf4j.repository.{RepositoryConnection, RepositoryResult}
+import org.eclipse.rdf4j.repository.{Repository, RepositoryConnection, RepositoryResult}
 import org.eclipse.rdf4j.repository.manager.RemoteRepositoryManager
-import org.eclipse.rdf4j.repository.sail.{SailRepository, SailRepositoryConnection}
+import org.eclipse.rdf4j.repository.sail.SailRepository
 import org.eclipse.rdf4j.sail.nativerdf.NativeStore
 import play.api.Configuration
 import play.api.inject.ApplicationLifecycle
@@ -45,17 +45,25 @@ trait TripleStore {
 @Singleton
 class TripleStoreImpl @Inject() (lifecycle: ApplicationLifecycle, configuration: Configuration) extends TripleStore {
 
-  val repodir = configuration.underlying.getString("importnow.dir")
-  val sailDir = new File(repodir + "/sail")
-  sailDir.mkdirs()
+  val isLocalRepo = configuration.underlying.getBoolean("importnow.isLocalRepo")
 
-  // local repo
-  //val repo = new SailRepository(new NativeStore(sailDir))
-  val repositoryManager =
-  new RemoteRepositoryManager( "http://127.0.0.1:7200/" )
-  repositoryManager.initialize()
-  // remote repo
-  val repo = repositoryManager.getRepository("repo1")
+  val repo: Repository = if (isLocalRepo) {
+    // local repo
+    val importnowDir = configuration.underlying.getString("importnow.dir")
+    val sailDir = new File(importnowDir + "/sail")
+    sailDir.mkdirs()
+    val localRepo = new SailRepository(new NativeStore(sailDir))
+    localRepo
+  } else {
+    // remote repo
+    val repositoryManagerUrl = configuration.underlying.getString("importnow.remoterepo.url")
+    val repositoryManager = new RemoteRepositoryManager(repositoryManagerUrl)
+    repositoryManager.initialize()
+    val repositoryManagerRepo = configuration.underlying.getString("importnow.remoterepo.repo")
+    val remoteRepo = repositoryManager.getRepository(repositoryManagerRepo)
+    remoteRepo
+  }
+
   if (!repo.isInitialized) {
     repo.initialize()
   }
@@ -63,7 +71,6 @@ class TripleStoreImpl @Inject() (lifecycle: ApplicationLifecycle, configuration:
   lifecycle.addStopHook { () =>
     Future(repo.shutDown())
   }
-
 
   val valueFactory = repo.getValueFactory
   val baseUri = configuration.underlying.getString("importnow.uriroot")
@@ -99,10 +106,10 @@ class TripleStoreImpl @Inject() (lifecycle: ApplicationLifecycle, configuration:
     }
   }
 
-  private def save(uploadName: String, index: Int, predicateString: String, valueString: String)(implicit conn: RepositoryConnection): Unit = {
-    val context = valueFactory.createIRI(baseUri, s"uploads/$uploadName" )
-    val subject = valueFactory.createIRI(baseUri, s"uploads/$uploadName/records/$index" )
-    val predicate = valueFactory.createIRI(baseUri, s"$uploadName/$predicateString")
+  private def save(typeName: String, index: Int, predicateString: String, valueString: String)(implicit conn: RepositoryConnection): Unit = {
+    val context = valueFactory.createIRI(baseUri, s"$typeName" )
+    val subject = valueFactory.createIRI(baseUri, s"$typeName/records/$index" )
+    val predicate = valueFactory.createIRI(baseUri, s"$typeName/$predicateString")
     val value = valueFactory.createLiteral(valueString)
     conn.add(subject, predicate, value, context)
   }
@@ -127,12 +134,12 @@ class TripleStoreImpl @Inject() (lifecycle: ApplicationLifecycle, configuration:
     }
   }
 
-  override def getSubjects(): Set[String] = {
+  override def getSubjects: Set[String] = {
     getAll(result => result.getSubject.stringValue())
   }
 
 
-  override def getPredicates(): Set[String] = {
+  override def getPredicates: Set[String] = {
     getAll(result => result.getPredicate.stringValue())
   }
 
