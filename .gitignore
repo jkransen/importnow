@@ -10,6 +10,7 @@ target
 /RUNNING_PID
 project/.sbtserver
 project/.sbtserver.lock
+/projectFilesBackup
 
 *.class
 

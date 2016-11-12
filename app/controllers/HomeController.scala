@@ -2,6 +2,7 @@ package controllers
 
 import javax.inject._
 
+import models.{HeaderMapping, HeadersMapping}
 import play.api.data.Form
 import play.api.data.Forms._
 import play.api.mvc._
@@ -10,9 +11,6 @@ import play.utils.UriEncoding
 import services.{FileSystem, TripleStore}
 
 import scala.util.matching.Regex
-
-case class HeaderMapping(headerName: String, localName: String)
-case class HeadersMapping(typeName: String, headers: List[HeaderMapping])
 
 /**
  * This controller creates an `Action` to handle HTTP requests to the
